@@ -18,12 +18,19 @@ class FaultPattern:
 
 def load_fault_patterns() -> list[FaultPattern]:
     path = Path(__file__).parent / "fault_patterns.json"
-    with open(path) as f:
-        data = json.load(f)
-    return [FaultPattern(**item) for item in data]
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        return [FaultPattern(**item) for item in data]
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        raise RuntimeError(f"Failed to load fault patterns from {path}: {e}") from e
 
 
-def match_patterns(description: str, patterns: list[FaultPattern]) -> list[FaultPattern]:
+def match_patterns(
+    description: str,
+    patterns: list[FaultPattern],
+    min_hits: int = 2,
+) -> list[FaultPattern]:
     """Simple keyword matching. Checks if pattern keywords (name, symptoms, causes)
     appear as substrings of the description. Works for both Chinese and English."""
     desc_lower = description.lower()
@@ -35,6 +42,6 @@ def match_patterns(description: str, patterns: list[FaultPattern]) -> list[Fault
             + [c.lower() for c in p.common_causes]
         )
         hits = sum(1 for kw in keyword_list if kw in desc_lower)
-        if hits >= 2:
+        if hits >= min_hits:
             matches.append(p)
     return sorted(matches, key=lambda p: p.level)
