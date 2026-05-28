@@ -1,0 +1,55 @@
+{
+  "alert": {
+    "id": "alert-002",
+    "timestamp": "2026-05-28T14:00:00",
+    "source": "prometheus",
+    "severity": "critical",
+    "title": "Pod频繁OOMKilled重启",
+    "resource": "recommendation-svc-pod-3",
+    "metric": "memory_usage_pct",
+    "current_value": 98.0,
+    "threshold": 90.0,
+    "labels": {"env": "production", "service": "recommendation-svc", "pod": "recommendation-svc-pod-3"},
+    "raw_data": {
+      "prometheus_query": "container_memory_usage_bytes / container_spec_memory_limit_bytes",
+      "alert_rule": "Container memory usage > 90% for 5min",
+      "restart_count": 4
+    }
+  },
+  "mock_metrics": {
+    "memory_usage_pct": 98,
+    "memory_limit_mb": 2048,
+    "heap_usage_mb": 1950,
+    "gc_frequency_per_min": 15,
+    "gc_pause_avg_ms": 450,
+    "cpu_usage_pct": 35,
+    "request_qps": 800
+  },
+  "mock_logs": [
+    "[13:55:00] WARN - recommendation-svc: GC overhead limit reached, Full GC taking 520ms",
+    "[13:56:30] WARN - recommendation-svc: GC overhead limit reached, Full GC taking 610ms",
+    "[13:58:00] ERROR - recommendation-svc: java.lang.OutOfMemoryError: Java heap space",
+    "[13:58:05] INFO - kubelet: Container recommendation-svc exceeded memory limit (2048MB), OOMKilled",
+    "[13:58:10] INFO - kubelet: Restarting container recommendation-svc (restart #4)"
+  ],
+  "mock_traces": [
+    "recommendation-svc → redis-cache: HGETALL user:preferences:12345 (response_size=85MB)",
+    "recommendation-svc → redis-cache: HGETALL user:preferences:67890 (response_size=92MB)"
+  ],
+  "mock_change_events": [
+    {"time": "2026-05-28T12:00:00", "type": "deploy", "service": "recommendation-svc", "description": "新增个性化推荐缓存逻辑(v2.3.1)"}
+  ],
+  "mock_heap_dump": {
+    "top_classes": [
+      {"class": "java.util.concurrent.ConcurrentHashMap$Node", "instances": 2850000, "size_mb": 1420},
+      {"class": "com.example.recommendation.UserPreference", "instances": 1420000, "size_mb": 380},
+      {"class": "java.lang.String", "instances": 580000, "size_mb": 45}
+    ],
+    "cache_config": {
+      "cache_name": "userPreferenceCache",
+      "max_size": "unlimited",
+      "expire_policy": "none",
+      "implementation": "ConcurrentHashMap"
+    }
+  }
+}

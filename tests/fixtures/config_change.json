@@ -1,0 +1,48 @@
+{
+  "alert": {
+    "id": "alert-003",
+    "timestamp": "2026-05-28T16:05:00",
+    "source": "prometheus",
+    "severity": "critical",
+    "title": "部署后错误率飙升",
+    "resource": "payment-gateway-svc",
+    "metric": "error_rate",
+    "current_value": 0.42,
+    "threshold": 0.05,
+    "labels": {"env": "production", "service": "payment-gateway"},
+    "raw_data": {
+      "prometheus_query": "rate(http_requests_total{status=~'5..'}[5m])",
+      "alert_rule": "Error rate > 5% for 3min",
+      "deploy_time": "2026-05-28T16:00:00"
+    }
+  },
+  "mock_metrics": {
+    "error_rate": 0.42,
+    "qps": 500,
+    "p99_latency_ms": 45000,
+    "timeout_rate": 0.38,
+    "cpu_usage_pct": 28,
+    "memory_usage_pct": 55
+  },
+  "mock_logs": [
+    "[16:01:00] ERROR - payment-gateway: upstream request timeout after 3000ms (upstream: bank-api)",
+    "[16:01:05] ERROR - payment-gateway: upstream request timeout after 3000ms (upstream: bank-api)",
+    "[16:01:30] ERROR - payment-gateway: circuit breaker opened for bank-api",
+    "[16:02:00] ERROR - payment-gateway: all upstreams unhealthy"
+  ],
+  "mock_traces": [
+    "payment-gateway → bank-api: POST /api/v1/charge (timeout after 3000ms)",
+    "payment-gateway → bank-api: POST /api/v1/charge (timeout after 3000ms)"
+  ],
+  "mock_change_events": [
+    {"time": "2026-05-28T16:00:00", "type": "deploy", "service": "payment-gateway", "description": "v3.2.0: 更新银行API超时配置"},
+    {"time": "2026-05-28T16:00:00", "type": "config", "service": "payment-gateway", "description": "bank_api_timeout_ms: 30000 → 3000"}
+  ],
+  "mock_config_diff": {
+    "file": "application.yml",
+    "changes": [
+      {"key": "bank_api.timeout_ms", "old_value": "30000", "new_value": "3000", "note": "单位疑为秒→毫秒的换算错误: 30000ms=30s → 改成了3000ms=3s"},
+      {"key": "bank_api.retry_count", "old_value": "3", "new_value": "3"}
+    ]
+  }
+}

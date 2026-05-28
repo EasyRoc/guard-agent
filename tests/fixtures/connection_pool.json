@@ -1,0 +1,63 @@
+{
+  "alert": {
+    "id": "alert-001",
+    "timestamp": "2026-05-28T10:30:00",
+    "source": "prometheus",
+    "severity": "critical",
+    "title": "数据库连接数超过阈值",
+    "resource": "mysql-orders-db",
+    "metric": "connections_active",
+    "current_value": 148.0,
+    "threshold": 150.0,
+    "labels": {"env": "production", "service": "api-server"},
+    "raw_data": {
+      "prometheus_query": "mysql_global_status_threads_connected",
+      "alert_rule": "MySQL connection usage > 90%",
+      "dashboard_url": "http://grafana/d/mysql-overview"
+    }
+  },
+  "mock_metrics": {
+    "connections_active": 148,
+    "connections_max": 150,
+    "qps": 1200,
+    "avg_query_duration_ms": 45000,
+    "slow_queries_last_5min": 23,
+    "error_rate": 0.15,
+    "cpu_usage_pct": 45,
+    "memory_usage_pct": 62
+  },
+  "mock_logs": [
+    "[10:28:15] ERROR - api-server: connection timeout after 30000ms",
+    "[10:28:20] ERROR - api-server: unable to acquire connection from pool (pool size=150, active=148, waiting=14)",
+    "[10:28:22] ERROR - api-server: too many connections",
+    "[10:29:00] WARN  - mysql: slow query detected: SELECT * FROM orders WHERE status='pending' ORDER BY created_at DESC (execution_time=45123ms)"
+  ],
+  "mock_traces": [
+    "api-server → mysql-orders-db: SELECT * FROM orders WHERE status='pending' (45.1s, rows_scanned=2840000)",
+    "api-server → mysql-orders-db: SELECT * FROM orders WHERE status='pending' (44.8s, rows_scanned=2840000)",
+    "api-server → mysql-orders-db: SELECT * FROM orders WHERE status='pending' (45.3s, rows_scanned=2840000)"
+  ],
+  "mock_change_events": [
+    {"time": "2026-05-28T09:00:00", "type": "deploy", "service": "frontend", "description": "前端UI更新"},
+    {"time": "2026-05-27T18:00:00", "type": "config", "service": "api-server", "description": "日志级别调整"}
+  ],
+  "mock_processlist": [
+    {"id": 101, "user": "app_user", "host": "10.0.1.5", "db": "orders_db", "command": "Query", "time": 45, "state": "Sending data", "info": "SELECT * FROM orders WHERE status='pending' ORDER BY created_at DESC"},
+    {"id": 102, "user": "app_user", "host": "10.0.1.6", "db": "orders_db", "command": "Query", "time": 44, "state": "Sending data", "info": "SELECT * FROM orders WHERE status='pending' ORDER BY created_at DESC"},
+    {"id": 103, "user": "app_user", "host": "10.0.1.7", "db": "orders_db", "command": "Query", "time": 45, "state": "Sending data", "info": "SELECT * FROM orders WHERE status='pending' ORDER BY created_at DESC"},
+    {"id": 104, "user": "app_user", "host": "10.0.1.8", "db": "orders_db", "command": "Sleep", "time": 0, "state": "", "info": ""}
+  ],
+  "mock_explain": {
+    "query": "SELECT * FROM orders WHERE status='pending'",
+    "plan": {
+      "id": 1, "select_type": "SIMPLE", "table": "orders", "type": "ALL",
+      "possible_keys": null, "key": null, "key_len": null,
+      "rows": 2840000, "filtered": 10.0, "Extra": "Using where; Using filesort"
+    },
+    "with_index_plan": {
+      "id": 1, "select_type": "SIMPLE", "table": "orders", "type": "ref",
+      "possible_keys": "idx_orders_status", "key": "idx_orders_status", "key_len": "768",
+      "rows": 1500, "filtered": 100.0, "Extra": "Using index condition; Using filesort"
+    }
+  }
+}
