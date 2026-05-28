@@ -4,6 +4,9 @@ import asyncio
 import json
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from src.tools.diagnostic import set_scenario
 from src.tools.mock_data import get_alert
 from src.knowledge.fault_patterns import load_fault_patterns
