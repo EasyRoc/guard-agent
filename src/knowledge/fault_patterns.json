@@ -1,0 +1,101 @@
+[
+  {
+    "id": "connection_pool_exhaustion",
+    "name": "数据库连接池耗尽",
+    "symptoms": [
+      "数据库连接数超过阈值",
+      "连接池",
+      "连接数>90%",
+      "too many connections",
+      "connection timeout",
+      "响应超时"
+    ],
+    "typical_traces": [
+      "大量慢查询占用连接",
+      "连接未释放",
+      "连接等待队列增长"
+    ],
+    "common_causes": [
+      "缺少索引导致全表扫描",
+      "连接泄漏未正确关闭",
+      "突发流量超过连接池上限"
+    ],
+    "diagnostic_queries": [
+      "SHOW PROCESSLIST",
+      "SHOW ENGINE INNODB STATUS",
+      "SELECT * FROM information_schema.processlist",
+      "EXPLAIN 慢查询语句"
+    ],
+    "repair_strategies": [
+      "添加缺失索引",
+      "修复连接泄漏代码",
+      "调大max_connections",
+      "启用连接池等待超时"
+    ],
+    "level": 1
+  },
+  {
+    "id": "oom_cache_unbounded",
+    "name": "内存溢出OOM - 缓存未限制大小",
+    "symptoms": [
+      "Pod OOMKilled",
+      "heap使用率超过95%",
+      "GC频繁Full GC",
+      "java.lang.OutOfMemoryError",
+      "memory usage 98%"
+    ],
+    "typical_traces": [
+      "缓存对象持续增长",
+      "GC无法回收",
+      "堆内存线性增长至上限"
+    ],
+    "common_causes": [
+      "本地缓存未设置大小上限",
+      "缓存未配置过期策略",
+      "大对象未及时释放"
+    ],
+    "diagnostic_queries": [
+      "jmap -histo <pid>",
+      "jstat -gc <pid>",
+      "查看缓存配置",
+      "dump heap分析"
+    ],
+    "repair_strategies": [
+      "为缓存设置maxSize上限",
+      "配置LRU过期策略",
+      "临时重启Pod释放内存"
+    ],
+    "level": 1
+  },
+  {
+    "id": "config_change_error",
+    "name": "配置变更导致服务异常",
+    "symptoms": [
+      "部署后错误率飙升",
+      "响应超时增加",
+      "配置变更后异常",
+      "error rate spike after deploy"
+    ],
+    "typical_traces": [
+      "新配置值与旧值差异大",
+      "错误集中在配置变更时间点后",
+      "回滚配置后恢复"
+    ],
+    "common_causes": [
+      "超时值单位错误（毫秒vs秒）",
+      "连接池参数设置不合理",
+      "环境特定配置遗漏"
+    ],
+    "diagnostic_queries": [
+      "git diff 上次部署",
+      "对比新旧配置文件",
+      "检查配置变更时间与告警时间关联"
+    ],
+    "repair_strategies": [
+      "回滚配置到上一版本",
+      "修正配置值并重新部署",
+      "增加配置校验规则"
+    ],
+    "level": 2
+  }
+]
