@@ -248,7 +248,6 @@ async def run_diagnosis(agent, alert: AlertEvent) -> DiagnosisReport:
         "evidence_chain": [],
         "confidence": 0.0,
         "repair_hypothesis": "",
-        "hypothesis_validated": False,
         "validation_detail": "",
         "diagnosis_report": None,
         "messages": [],
