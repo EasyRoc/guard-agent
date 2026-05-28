@@ -115,7 +115,7 @@ def create_supervisor(
     return create_react_agent(
         llm,
         tools,
-        state_modifier=system_prompt,
+        prompt=system_prompt,
         checkpointer=MemorySaver(),
     )
 
